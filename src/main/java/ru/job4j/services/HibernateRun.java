@@ -2,65 +2,71 @@ package ru.job4j.services;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import ru.job4j.models.User;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class HibernateRun {
 
-    public static User create(User user, SessionFactory sf) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        session.save(user);
-        session.getTransaction().commit();
-        session.close();
+    SessionFactory sf = new Configuration().configure().buildSessionFactory();
+
+    public User create(User user) throws Exception {
+        this.tx(session -> session.save(user));
         return user;
     }
 
-    public static void update(User user, SessionFactory sf) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        session.update(user);
-        session.getTransaction().commit();
-        session.close();
+    public void update(User user) throws Exception {
+        this.tx(session -> {session.update(user);
+                            return true;}
+        );
     }
 
-    public static void delete(Integer id, SessionFactory sf) {
-        Session session = sf.openSession();
-        session.beginTransaction();
+    public void delete(Integer id) throws Exception {
         User user = new User(null);
         user.setId(id);
-        session.delete(user);
-        session.getTransaction().commit();
-        session.close();
+        this.tx(session -> {session.delete(user);
+                return true;}
+        );
     }
 
-    public static List<User> findAll(SessionFactory sf) {
-        Session session = sf.openSession();
-        List result = session.createQuery("from User").list();
-        session.close();
-        return result;
+    public List<User> findAll() throws Exception {
+        return this.tx(session -> session.createQuery("from User").list());
     }
 
-    public static User findById(Integer id, SessionFactory sf) {
-        Session session = sf.openSession();
-        User result = session.get(User.class, id);
-        session.close();
-        return result;
+    public User findById(Integer id) throws Exception {
+        return this.tx(session -> session.get(User.class, id));
     }
 
-    public static void main(String[] args) {
-        SessionFactory sf = new Configuration().configure().buildSessionFactory();
-        User user = create(new User("Eugene"), sf);
+    private <T> T tx(final Function<Session, T> command) throws Exception {
+        final Session session = sf.openSession();
+        final Transaction tx = session.beginTransaction();
+        try {
+            T rsl = command.apply(session);
+            tx.commit();
+            return rsl;
+        } catch (final Exception e) {
+            session.getTransaction().rollback();
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        HibernateRun r = new HibernateRun();
+        User user = r.create(new User("Eugene"));
         System.out.println(user);
         user.setName("Eugene Popov");
-        update(user, sf);
+        r.update(user);
         System.out.println(user);
-        User rsl = findById(user.getId(), sf);
+        User rsl = r.findById(user.getId());
         System.out.println(rsl);
-        delete(rsl.getId(), sf);
-        List<User> list = findAll(sf);
+        r.delete(rsl.getId());
+        List<User> list = r.findAll();
         for (User it : list) {
             System.out.println(it);
         }
