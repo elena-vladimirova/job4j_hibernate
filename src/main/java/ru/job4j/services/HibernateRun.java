@@ -4,6 +4,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import ru.job4j.models.Comment;
+import ru.job4j.models.Item;
 import ru.job4j.models.User;
 
 import java.util.List;
@@ -13,9 +15,9 @@ public class HibernateRun {
 
     SessionFactory sf = new Configuration().configure().buildSessionFactory();
 
-    public User create(User user) throws Exception {
-        this.tx(session -> session.save(user));
-        return user;
+    public <T> T create(T obj) throws Exception {
+        this.tx(session -> session.save(obj));
+        return obj;
     }
 
     public void update(User user) throws Exception {
@@ -36,8 +38,12 @@ public class HibernateRun {
         return this.tx(session -> session.createQuery("from User").list());
     }
 
-    public User findById(Integer id) throws Exception {
+    public User findUserById(Integer id) throws Exception {
         return this.tx(session -> session.get(User.class, id));
+    }
+
+    public Item findItemById(Integer id) throws Exception {
+        return this.tx(session -> session.get(Item.class, id));
     }
 
     private <T> T tx(final Function<Session, T> command) throws Exception {
@@ -58,7 +64,7 @@ public class HibernateRun {
     public static void main(String[] args) throws Exception {
 
         HibernateRun r = new HibernateRun();
-        User user = r.create(new User("Eugene"));
+        /*User user = r.create(new User("Eugene"));
         System.out.println(user);
         user.setName("Eugene Popov");
         r.update(user);
@@ -69,6 +75,21 @@ public class HibernateRun {
         List<User> list = r.findAll();
         for (User it : list) {
             System.out.println(it);
-        }
+        }*/
+
+        Item item = new Item();
+        item.setDesc("Err");
+        item.setAuthor(r.create(new User("Eugene")));
+        r.create(item);
+        Item rsl = r.findItemById(item.getId());
+        System.out.println(item);
+
+        Comment comment = new Comment("Done");
+        comment.setItem(item);
+        r.create(comment);
+
+        rsl = r.findItemById(item.getId());
+        System.out.println(item);
+
     }
 }

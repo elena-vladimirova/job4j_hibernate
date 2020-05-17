@@ -7,8 +7,11 @@
         <property name="hibernate.connection.password">postgres</property>
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
         <property name="dialect">org.hibernate.dialect.PostgreSQL94Dialect</property>
+        <property name="show_sql">true</property>
 
         <mapping resource="ru/job4j/models/User.hbm.xml" />
+        <mapping class="ru.job4j.models.Item" />
+        <mapping class="ru.job4j.models.Comment" />
 
     </session-factory>
 </hibernate-configuration>
