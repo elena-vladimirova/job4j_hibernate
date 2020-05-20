@@ -90,6 +90,7 @@ public class HibernateRun {
 
         rsl = r.findItemById(item.getId());
         System.out.println(item);
+        System.out.println(rsl.getComments());
 
     }
 }

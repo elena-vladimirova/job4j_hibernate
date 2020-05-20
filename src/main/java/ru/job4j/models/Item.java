@@ -14,8 +14,8 @@ public class Item {
     @ManyToOne
     @JoinColumn(name = "author_id", foreignKey = @ForeignKey(name = "AUTHOR_ID_FK") )
     private User author;
-    @OneToMany
-    @JoinColumn(name="ITEM_ID")
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "item_id", foreignKey = @ForeignKey(name = "ITEMS_FK") )
     private List<Comment> comments;
 
     public Item() {
