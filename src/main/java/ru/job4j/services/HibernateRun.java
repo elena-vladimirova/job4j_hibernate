@@ -4,6 +4,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.query.Query;
 import ru.job4j.models.Comment;
 import ru.job4j.models.Item;
 import ru.job4j.models.User;
@@ -44,6 +45,21 @@ public class HibernateRun {
 
     public Item findItemById(Integer id) throws Exception {
         return this.tx(session -> session.get(Item.class, id));
+    }
+
+    public List<Item> findItemByCridentional(String author) throws Exception {
+        return this.tx(session -> {List<Item> result = null;
+                                   Query queryAuthorId = session.createQuery("select u.id from User u where u.name = :author");
+                                   queryAuthorId.setParameter("author", author);
+                                   Integer authorId = (Integer)queryAuthorId.uniqueResult();
+                                   if (authorId != null) {
+                                       Query queryItem = session.createQuery("select i from Item i where i.author = :authorId");
+                                       queryItem.setParameter("authorId", authorId);
+                                       result = queryItem.list();
+                                   }
+                                   return result;
+                                  }
+                      );
     }
 
     private <T> T tx(final Function<Session, T> command) throws Exception {
@@ -91,6 +107,9 @@ public class HibernateRun {
         rsl = r.findItemById(item.getId());
         System.out.println(item);
         System.out.println(rsl.getComments());
+
+        List<Item> items = r.findItemByCridentional("Eugene");
+        items.stream().forEach(i -> System.out.println(i));
 
     }
 }
