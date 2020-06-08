@@ -53,7 +53,7 @@ public class HibernateRun {
                                    queryAuthorId.setParameter("author", author);
                                    Integer authorId = (Integer)queryAuthorId.uniqueResult();
                                    if (authorId != null) {
-                                       Query queryItem = session.createQuery("select i from Item i where i.author = :authorId");
+                                       Query queryItem = session.createQuery("select i from Item i where i.author.id = :authorId");
                                        queryItem.setParameter("authorId", authorId);
                                        result = queryItem.list();
                                    }
